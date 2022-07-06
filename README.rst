@@ -18,42 +18,18 @@ Usage Example
 
 .. code-block :: python
 
-    # Import all board pins and bus interface.
     import board
-    import busio
+    from adafruit_ht16k33.segments import Seg7x4
 
-    # Import the HT16K33 LED matrix module.
-    from adafruit_ht16k33 import matrix
+    i2c = board.I2C()
+    segment = Seg7x4(i2c, address=0x70)
 
-    # Create the I2C interface.
-    i2c = busio.I2C(board.SCL, board.SDA)
+    segment.fill(0)
+    segment[0] = str("1")
+    segment[1] = str("2")
+    segment[2] = str("3")
+    segment[3] = str("4")
 
-    # Create the matrix class.
-    # This creates a 16x8 matrix:
-    matrix = matrix.Matrix16x8(i2c)
-    # Or this creates a 8x8 matrix:
-    #matrix = matrix.Matrix8x8(i2c)
-    # Or this creates a 8x8 bicolor matrix:
-    #matrix = matrix.Matrix8x8x2
-    # Finally you can optionally specify a custom I2C address of the HT16k33 like:
-    #matrix = matrix.Matrix16x8(i2c, address=0x70)
-
-    # Clear the matrix.
-    matrix.fill(0)
-
-    # Set a pixel in the origin 0,0 position.
-    matrix[0, 0] = 1
-    # Set a pixel in the middle 8, 4 position.
-    matrix[8, 4] = 1
-    # Set a pixel in the opposite 15, 7 position.
-    matrix[15, 7] = 1
-    matrix.show()
-
-    # Change the brightness
-    matrix.brightness = 8
-
-    # Set the blink rate
-    matrix.blink_rate = 2
 
 
 Documentation
