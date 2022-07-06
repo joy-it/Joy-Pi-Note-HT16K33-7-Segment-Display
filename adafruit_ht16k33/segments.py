@@ -375,7 +375,7 @@ class Seg14x4(HT16K33):
 
 
 class _AbstractSeg7x4(Seg14x4):
-    POSITIONS = (0, 2, 6, 8)  #  The positions of characters.
+    POSITIONS = (0, 2, 4, 6)  #  The positions of characters.
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
