@@ -70,6 +70,3 @@ else:
     display.set_digit_raw(2, (0b00101101, 0b00111111))
     display.set_digit_raw(3, [0x2D, 0x3F])
 time.sleep(2)
-
-# Show a looping marquee
-display.marquee("Deadbeef 192.168.100.102... ", 0.2)
