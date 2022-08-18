@@ -17,7 +17,7 @@ try:
 except ImportError:
     pass
 
-__version__ = "0.0.0-auto.0"
+__version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_HT16K33.git"
 
 # fmt: off
@@ -143,7 +143,6 @@ NUMBERS = (
 
 class Seg14x4(HT16K33):
     """Alpha-Numeric 14-segment display.
-
     :param I2C i2c: The I2C bus object
     :param address: The I2C address for the display. Can be a tuple or list for multiple displays.
     :param bool auto_write: True if the display should immediately change when set. If False,
@@ -170,7 +169,6 @@ class Seg14x4(HT16K33):
 
     def print(self, value: Union[str, int, float], decimal: int = 0) -> None:
         """Print the value to the display.
-
         :param value: The value to print
         :type value: str, int, or float
         :param int decimal: The number of decimal places for a floating point
@@ -189,7 +187,6 @@ class Seg14x4(HT16K33):
 
     def print_hex(self, value: int) -> None:
         """Print the value as a hexidecimal string to the display.
-
         :param int value: The number to print
         """
 
@@ -205,7 +202,6 @@ class Seg14x4(HT16K33):
 
     def scroll(self, count: int = 1) -> None:
         """Scroll the display by specified number of places.
-
         :param int count: The number of places to scroll
         """
 
@@ -235,7 +231,7 @@ class Seg14x4(HT16K33):
         self._set_buffer(self._adjusted_index(index * 2), CHARS[1 + character])
         self._set_buffer(self._adjusted_index(index * 2 + 1), CHARS[character])
 
-    def _push(self, char: str) -> None:
+    def _push(self, char: str, colon: bool = False, dot: bool = False) -> None:
         """Scroll the display and add a character at the end."""
         if (
             char != "."
@@ -248,19 +244,39 @@ class Seg14x4(HT16K33):
 
     def _text(self, text: str) -> None:
         """Display the specified text."""
+        if ":" in text:
+            _colonVar = True
+        else:
+            _colonVar = False
+        
+        dot_pos = text.find('.')
+        
+        if dot_pos == 1:
+            raise ValueError('The segment display cannot show this decimal.')
+        elif dot_pos == 2:
+            dot = True
+            print(True)
+        else:
+            dot = False
+        
+        i = 0
         for character in text:
-            self._push(character)
+            if i == 1:
+                self._push(character,_colonVar, False)
+            elif i == 2:
+                self._push(character,False, dot)
+            else:
+                self._push(character,False, False)
+            i+= 1
 
     def _number(self, number: Union[int, float], decimal: int = 0) -> str:
         """
         Display a floating point or integer number on the Adafruit HT16K33 based displays
-
         Param: number - The floating point or integer number to be displayed, which must be
                 in the range 0 (zero) to 9999 for integers and floating point or integer numbers
                 and between 0.0 and 999.0 or 99.00 or 9.000 for floating point numbers.
         Param: decimal - The number of decimal places for a floating point number if decimal
                 is greater than zero, or the input number is an integer if decimal is zero.
-
         Returns: The output text string to be displayed.
         """
 
@@ -321,7 +337,6 @@ class Seg14x4(HT16K33):
     def set_digit_raw(self, index: int, bitmask: Union[int, List, Tuple]) -> None:
         """Set digit at position to raw bitmask value. Position should be a value
         of 0 to 3 with 0 being the left most character on the display.
-
         :param int index: The index of the display to set
         :param bitmask: A 2 byte number corresponding to the segments to set
         :type bitmask: int, or a list/tuple of bool
@@ -344,36 +359,6 @@ class Seg14x4(HT16K33):
         if self._auto_write:
             self.show()
 
-    def marquee(self, text: str, delay: float = 0.25, loop: bool = True) -> None:
-        """
-        Automatically scroll the text at the specified delay between characters
-
-        :param str text: The text to display
-        :param float delay: (optional) The delay in seconds to pause before scrolling
-                            to the next character (default=0.25)
-        :param bool loop: (optional) Whether to endlessly loop the text (default=True)
-
-        """
-        if isinstance(text, str):
-            self.fill(False)
-            if loop:
-                while True:
-                    self._scroll_marquee(text, delay)
-            else:
-                self._scroll_marquee(text, delay)
-
-    def _scroll_marquee(self, text: str, delay: float) -> None:
-        """Scroll through the text string once using the delay"""
-        char_is_dot = False
-        for character in text:
-            self.print(character)
-            # Add delay if character is not a dot or more than 2 in a row
-            if character != "." or char_is_dot:
-                sleep(delay)
-            char_is_dot = character == "."
-            self.show()
-
-
 class _AbstractSeg7x4(Seg14x4):
     POSITIONS = (0, 2, 4, 6)  #  The positions of characters.
 
@@ -388,6 +373,7 @@ class _AbstractSeg7x4(Seg14x4):
         super().__init__(i2c, address, auto_write, chars_per_display)
         self._chardict = char_dict
         self._bytes_per_char = 1
+        
 
     def _adjusted_index(self, index):
         # Determine which part of the buffer to use and adjust index
@@ -396,7 +382,6 @@ class _AbstractSeg7x4(Seg14x4):
 
     def scroll(self, count: int = 1) -> None:
         """Scroll the display by specified number of places.
-
         :param int count: The number of places to scroll
         """
 
@@ -410,7 +395,7 @@ class _AbstractSeg7x4(Seg14x4):
                 self._get_buffer(self._adjusted_index(i + count)),
             )
 
-    def _push(self, char: str) -> None:
+    def _push(self, char: str, colon: bool = False, dot: bool = False) -> None:
         """Scroll the display and add a character at the end."""
         if char in ":;":
             self._put(char)
@@ -420,10 +405,10 @@ class _AbstractSeg7x4(Seg14x4):
                 or self._get_buffer(self._adjusted_index(self._chars - 1)) & 0b10000000
             ):
                 self.scroll()
-                self._put(" ", self._chars - 1)
-            self._put(char, self._chars - 1)
+                self._put(" ", self._chars - 1, colon, dot)
+            self._put(char, self._chars - 1, colon, dot)
 
-    def _put(self, char: str, index: int = 0) -> None:
+    def _put(self, char: str, index: int = 0, colon: bool= False, dot: bool = False) -> None:
         """Put a character at the specified place."""
         # pylint: disable=too-many-return-statements
         if not 0 <= index < self._chars:
@@ -434,7 +419,10 @@ class _AbstractSeg7x4(Seg14x4):
             return
         char = char.lower()
         if char == ".":
-            self._set_buffer(index, self._get_buffer(index) | 0b10000000)
+            if dot:
+                self._set_buffer(index-2, self._get_buffer(index-2) | 0b10000000)
+            else:
+                self._set_buffer(index, self._get_buffer(index) | 0b10000000)
             return
         if char in "abcdef":
             character = ord(char) - 97 + 10
@@ -446,10 +434,9 @@ class _AbstractSeg7x4(Seg14x4):
             self._set_buffer(index, 0x00)
             return
         elif char == ":":
-            self._set_buffer(4, 0x02)
             return
         elif char == ";":
-            self._set_buffer(4, 0x00)
+            self._set_buffer(index, 0x00)
             return
         elif char in "lL":
             self._set_buffer(index, 0b00111000)
@@ -459,12 +446,14 @@ class _AbstractSeg7x4(Seg14x4):
             return
         else:
             return
-        self._set_buffer(index, NUMBERS[character])
+        if colon:
+            self._set_buffer(index, NUMBERS[character] | 0x80)     
+        else:
+            self._set_buffer(index, NUMBERS[character])
 
     def set_digit_raw(self, index: int, bitmask: int) -> None:
         """Set digit at position to raw bitmask value. Position should be a value
         of 0 to 3 with 0 being the left most digit on the display.
-
         :param int index: The index of the display to set
         :param int bitmask: A single byte number corresponding to the segments to set
         """
@@ -476,7 +465,6 @@ class _AbstractSeg7x4(Seg14x4):
 
         # Set the digit bitmask value at the appropriate position.
         self._set_buffer(self._adjusted_index(index), bitmask & 0xFF)
-
         if self._auto_write:
             self.show()
 
@@ -484,7 +472,6 @@ class _AbstractSeg7x4(Seg14x4):
 class Seg7x4(_AbstractSeg7x4):
     """Numeric 7-segment display. It has the same methods as the alphanumeric display, but only
     supports displaying a limited set of characters.
-
     :param I2C i2c: The I2C bus object
     :param address: The I2C address for the display. Can be a tuple or list for multiple displays.
     :param bool auto_write: True if the display should immediately change when set. If False,
@@ -518,7 +505,6 @@ class Seg7x4(_AbstractSeg7x4):
 class BigSeg7x4(_AbstractSeg7x4):
     """Numeric 7-segment display. It has the same methods as the alphanumeric display, but only
     supports displaying a limited set of characters.
-
     :param I2C i2c: The I2C bus object
     :param int address: The I2C address for the display
     :param bool auto_write: True if the display should immediately change when set. If False,
@@ -594,7 +580,7 @@ class Colon:
 
     # pylint: disable=protected-access
 
-    MASKS = (0x02, 0x0C)
+    MASKS = (0x80, 0x0C)
 
     def __init__(self, disp: Seg7x4, num_of_colons: int = 1) -> None:
         self._disp = disp
@@ -603,15 +589,15 @@ class Colon:
     def __setitem__(self, key: int, value: bool) -> None:
         if key > self._num_of_colons - 1:
             raise ValueError("Trying to set a non-existent colon.")
-        current = self._disp._get_buffer(0x04)
+        current = self._disp._get_buffer(0x02)
         if value:
-            self._disp._set_buffer(0x04, current | self.MASKS[key])
+            self._disp._set_buffer(0x02, current | self.MASKS[key])
         else:
-            self._disp._set_buffer(0x04, current & ~self.MASKS[key])
+            self._disp._set_buffer(0x02, current & ~self.MASKS[key])
         if self._disp.auto_write:
             self._disp.show()
 
     def __getitem__(self, key: int) -> bool:
         if key > self._num_of_colons - 1:
             raise ValueError("Trying to access a non-existent colon.")
-        return bool(self._disp._get_buffer(0x04) & self.MASKS[key])
+        return bool(self._disp._get_buffer(0x02) & self.MASKS[key])
