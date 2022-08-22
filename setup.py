@@ -50,5 +50,5 @@ setup(
     keywords="adafruit ht16k33 led matrix segment displays hardware micropython circuitpython",
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=["adafruit_ht16k33"],
+    packages=["JoypiNote_adafruit_ht16k33"],
 )
