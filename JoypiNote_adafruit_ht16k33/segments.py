@@ -9,7 +9,7 @@ adafruit_ht16k33.segments
 """
 
 from time import sleep
-from adafruit_ht16k33.ht16k33 import HT16K33
+from JoypiNote_adafruit_ht16k33.ht16k33 import HT16K33
 
 try:
     from typing import Union, List, Tuple, Optional, Dict
