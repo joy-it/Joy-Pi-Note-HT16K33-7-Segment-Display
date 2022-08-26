@@ -19,7 +19,7 @@ Usage Example
 .. code-block :: python
 
     import board
-    from adafruit_ht16k33.segments import Seg7x4
+    from JoypiNote_adafruit_ht16k33.segments import Seg7x4
 
     i2c = board.I2C()
     segment = Seg7x4(i2c, address=0x70)
